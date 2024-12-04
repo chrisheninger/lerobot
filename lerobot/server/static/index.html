@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Robot Teleoperation Control</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1300px;
+        margin: 40px auto;
+        padding: 20px;
+      }
+      .button {
+        padding: 10px 20px;
+        margin: 10px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+      }
+      #startButton {
+        background-color: #4caf50;
+        color: white;
+      }
+      #stopButton {
+        background-color: #f44336;
+        color: white;
+      }
+      #recordButton {
+        background-color: #673ab7;
+        color: white;
+      }
+      #status {
+        margin: 20px 0;
+        padding: 10px;
+        border-radius: 4px;
+      }
+      .running {
+        background-color: #e8f5e9;
+      }
+      .stopped {
+        background-color: #ffebee;
+      }
+      #output {
+        margin: 20px 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        height: 300px;
+        overflow-y: auto;
+        font-family: monospace;
+        background-color: #f5f5f5;
+      }
+      .video-container {
+        display: flex;
+        justify-content: space-between;
+        margin: 20px 0;
+        gap: 20px;
+      }
+      .video-feed {
+        width: 640px;
+        height: 480px;
+        background: #000;
+        border-radius: 4px;
+      }
+      #recordings {
+        margin: 20px 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      .recording-item {
+        padding: 10px;
+        margin: 5px 0;
+        background: #f8f9fa;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .recording-info {
+        flex-grow: 1;
+      }
+      .replay-btn {
+        background-color: #2196f3;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Robot Teleoperation Control</h1>
+
+    <div class="video-container">
+      <img class="video-feed" id="camera1" src="/video/0" alt="Camera 1" />
+      <img class="video-feed" id="camera2" src="/video/1" alt="Camera 2" />
+    </div>
+
+    <div>
+      <button id="startButton" class="button">Start Teleoperation</button>
+      <button id="stopButton" class="button">Stop Teleoperation</button>
+      <button id="recordButton" class="button">Start Recording</button>
+    </div>
+
+    <div id="status">Status: Checking...</div>
+    <div id="output"></div>
+
+    <div id="recordings">
+      <h3>Available Recordings</h3>
+      <!-- Recordings will be inserted here -->
+    </div>
+
+    <script>
+      async function updateStatus() {
+        try {
+          const response = await fetch("/teleoperation/status");
+          const data = await response.json();
+          const statusDiv = document.getElementById("status");
+          statusDiv.textContent = `Status: ${
+            data.running ? "Running" : "Stopped"
+          }`;
+          statusDiv.className = data.running ? "running" : "stopped";
+        } catch (error) {
+          console.error("Error fetching status:", error);
+        }
+      }
+
+      function connectEventSource() {
+        if (window.eventSource) {
+          window.eventSource.close();
+        }
+
+        window.eventSource = new EventSource("/stream");
+
+        window.eventSource.onmessage = function (event) {
+          const newLine = document.createElement("div");
+          newLine.textContent = event.data;
+          output.appendChild(newLine);
+          output.scrollTop = output.scrollHeight;
+
+          if (event.data === "--- Streaming ended ---") {
+            window.eventSource.close();
+          }
+        };
+
+        window.eventSource.onerror = function (error) {
+          console.error("SSE Error:", error);
+          window.eventSource.close();
+        };
+      }
+
+      document
+        .getElementById("startButton")
+        .addEventListener("click", async () => {
+          try {
+            output.innerHTML = "";
+            await fetch("/teleoperation/start", { method: "POST" });
+            updateStatus();
+            connectEventSource();
+          } catch (error) {
+            console.error("Error starting teleoperation:", error);
+          }
+        });
+
+      document
+        .getElementById("stopButton")
+        .addEventListener("click", async () => {
+          try {
+            await fetch("/teleoperation/stop", { method: "POST" });
+            updateStatus();
+            if (window.eventSource) {
+              window.eventSource.close();
+            }
+          } catch (error) {
+            console.error("Error stopping teleoperation:", error);
+          }
+        });
+
+      document
+        .getElementById("recordButton")
+        .addEventListener("click", async () => {
+          try {
+            output.innerHTML = "";
+            const response = await fetch("/recording/start", {
+              method: "POST",
+            });
+            const data = await response.json();
+            console.log("Started recording:", data.recording_id);
+            updateStatus();
+            connectEventSource();
+          } catch (error) {
+            console.error("Error starting recording:", error);
+          }
+        });
+
+      async function replayRecording(recordingId) {
+        try {
+          output.innerHTML = "";
+          const response = await fetch(`/replay/${recordingId}`, {
+            method: "POST",
+          });
+          const data = await response.json();
+          console.log("Started replay:", data.message);
+          updateStatus();
+          connectEventSource();
+        } catch (error) {
+          console.error("Error starting replay:", error);
+        }
+      }
+
+      async function updateRecordings() {
+        try {
+          const response = await fetch("/recordings");
+          const recordings = await response.json();
+          const listElement = document.getElementById("recordings");
+
+          let html = "<h3>Available Recordings</h3>";
+          recordings.forEach((recording) => {
+            const date = new Date(recording.created * 1000).toLocaleString();
+            html += `
+              <div class="recording-item">
+                <div class="recording-info">
+                  <strong>${recording.id}</strong><br>
+                  <small>Created: ${date}</small>
+                </div>
+                <button class="button replay-btn" onclick="replayRecording('${recording.id}')">
+                  Replay
+                </button>
+              </div>
+            `;
+          });
+
+          listElement.innerHTML = html;
+        } catch (error) {
+          console.error("Error fetching recordings:", error);
+        }
+      }
+
+      // Only check status periodically, remove initial EventSource connection
+      updateStatus();
+      setInterval(updateStatus, 2000);
+      updateRecordings();
+      setInterval(updateRecordings, 5000);
+    </script>
+  </body>
+</html>

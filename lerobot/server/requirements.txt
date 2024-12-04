@@ -1,0 +1,4 @@
+fastapi>=0.68.0
+uvicorn>=0.15.0
+pyyaml>=5.4.1
+sse-starlette>=1.6.5
