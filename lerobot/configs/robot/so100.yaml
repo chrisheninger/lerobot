@@ -18,6 +18,17 @@ max_relative_target: null
 leader_arms:
   main:
     _target_: lerobot.common.robot_devices.motors.feetech.FeetechMotorsBus
+    port: /dev/tty.usbmodem58CD1774131
+    motors:
+      # name: (index, model)
+      shoulder_pan: [1, "sts3215"]
+      shoulder_lift: [2, "sts3215"]
+      elbow_flex: [3, "sts3215"]
+      wrist_flex: [4, "sts3215"]
+      wrist_roll: [5, "sts3215"]
+      gripper: [6, "sts3215"]
+  secondary:
+    _target_: lerobot.common.robot_devices.motors.feetech.FeetechMotorsBus
     port: /dev/tty.usbmodem58FD0165421
     motors:
       # name: (index, model)
@@ -30,6 +41,17 @@ leader_arms:
 
 follower_arms:
   main:
+    _target_: lerobot.common.robot_devices.motors.feetech.FeetechMotorsBus
+    port: /dev/tty.usbmodem58CD1775701
+    motors:
+      # name: (index, model)
+      shoulder_pan: [1, "sts3215"]
+      shoulder_lift: [2, "sts3215"]
+      elbow_flex: [3, "sts3215"]
+      wrist_flex: [4, "sts3215"]
+      wrist_roll: [5, "sts3215"]
+      gripper: [6, "sts3215"]
+  secondary:
     _target_: lerobot.common.robot_devices.motors.feetech.FeetechMotorsBus
     port: /dev/tty.usbmodem58FD0164191
     motors:
