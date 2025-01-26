@@ -1,8 +1,11 @@
-Leader: /dev/tty.usbmodem58FD0165421
-Follower: /dev/tty.usbmodem58FD0164191
+Secondary Leader: /dev/tty.usbmodem58FD0165421 (first one built)
+Secondary Follower: /dev/tty.usbmodem58FD0164191
+
+Main Leader: /dev/tty.usbmodem58CD1774131
+Main Follower: /dev/tty.usbmodem58CD1775701
 
 python lerobot/scripts/configure_motor.py \
- --port /dev/tty.usbmodem58FD0165421 \
+ --port /dev/tty.usbmodem58CD1774131 \
  --brand feetech \
  --model sts3215 \
  --baudrate 1000000 \
