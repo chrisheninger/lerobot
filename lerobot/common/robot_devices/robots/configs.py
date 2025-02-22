@@ -27,7 +27,8 @@ class RobotConfig(draccus.ChoiceRegistry, abc.ABC):
 @dataclass
 class ManipulatorRobotConfig(RobotConfig):
     leader_arms: dict[str, MotorsBusConfig] = field(default_factory=lambda: {})
-    follower_arms: dict[str, MotorsBusConfig] = field(default_factory=lambda: {})
+    follower_arms: dict[str, MotorsBusConfig] = field(
+        default_factory=lambda: {})
     cameras: dict[str, CameraConfig] = field(default_factory=lambda: {})
 
     # Optionally limit the magnitude of the relative positional target vector for safety purposes.
@@ -429,7 +430,7 @@ class So100RobotConfig(ManipulatorRobotConfig):
     leader_arms: dict[str, MotorsBusConfig] = field(
         default_factory=lambda: {
             "main": FeetechMotorsBusConfig(
-                port="/dev/tty.usbmodem58760431091",
+                port="/dev/tty.usbmodem58CD1774131",
                 motors={
                     # name: (index, model)
                     "shoulder_pan": [1, "sts3215"],
@@ -446,7 +447,7 @@ class So100RobotConfig(ManipulatorRobotConfig):
     follower_arms: dict[str, MotorsBusConfig] = field(
         default_factory=lambda: {
             "main": FeetechMotorsBusConfig(
-                port="/dev/tty.usbmodem585A0076891",
+                port="/dev/tty.usbmodem58CD1775701",
                 motors={
                     # name: (index, model)
                     "shoulder_pan": [1, "sts3215"],
